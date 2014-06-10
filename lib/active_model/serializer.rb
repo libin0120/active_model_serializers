@@ -110,6 +110,8 @@ end
       @meta_key      = options[:meta_key] || :meta
       @meta          = options[@meta_key]
       @wrap_in_array = options[:_wrap_in_array]
+      @only          = Array(options[:only]) if options[:only]
+      @except        = Array(options[:except]) if options[:except]
     end
     attr_accessor :object, :scope, :root, :json_root, :xml_root, :meta_key, :meta
 
@@ -150,7 +152,13 @@ end
     end
 
     def filter(keys)
-      keys
+      if @only
+        keys & @only
+      elsif @except
+        keys - @except
+      else
+        keys
+      end
     end
 
     def embedded_in_root_associations
@@ -193,7 +201,7 @@ end
     end
 
     def serializable_object(options={})
-      return nil if object.nil?
+      return @wrap_in_array ? [] : nil if @object.nil?
       hash = attributes
       hash.merge! associations
       @wrap_in_array ? [hash] : hash
